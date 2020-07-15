@@ -10,7 +10,7 @@ void main()
     while (1)
     {
       Digital_Cube_Show();
-      delay100ms(7);
+      delay100ms(10);
     }
     
 }
