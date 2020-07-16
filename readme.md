@@ -1,12 +1,12 @@
 # SDCC+vscode+Ubuntu搭建C 51环境
 
+@[toc]
+
 ---
 **我创建了一个[工程模板](https://github.com/Shuai-xv/C51-project_template-for-SDCC.git),可以在这上面修改使用。**
 
 ---
-
 ## demo
-
 先看效果图：
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/2020071515440846.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3poYW9qdW42NjY=,size_16,color_FFFFFF,t_70)
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20200715161220723.gif#pic_center)
@@ -45,38 +45,33 @@
 # 功能是编译并完成下载
 CC      = sdcc
 stc     = python ./stcflash.py
-include = ./include/
+include = ./include
+srcfiles  = $(shell find . -name "*.c")
+relfiles = $(shell find . -name "*.rel")
 
 all : main.hex
 
 download : main.hex
 	$(stc) main.hex
-	rm -rf *.lk *.bin *.asm *.lst *.mem *.rst *.lnk *.rel *.sym *.ihx *.map
 
-main.bin : main.hex
-	objcopy -I ihex -O binary main.hex #main.bin
+# main.bin : main.hex
+# 	objcopy -I ihex -O binary main.hex #main.bin
     
 main.hex : main.ihx
 	packihx main.ihx > main.hex
-# ********************以下4个需要修改********************************************
-main.ihx : main.rel timer.rel led.rel
-	$(CC) main.rel led.rel timer.rel
 
-main.rel : main.c $(include)timer.c #$(include)macro.h
-	$(CC) -c main.c
-    
-led.rel : $(include)led.c $(include)timer.c #$(include)macro.h
-	$(CC) -c $(include)led.c
-    
-timer.rel : $(include)timer.c #$(include)macro.h
-	$(CC) -c $(include)timer.c
-# *****************************************************************************
+main.ihx : main.rel #timer.rel led.rel #*.rel
+	$(CC) $(relfiles) -o main.ihx 
+
+%.rel : $(srcfiles)
+	@for i in $(srcfiles); do \
+		$(CC) -c $$i; \
+	done
+
 clean:
 	rm -rf *.lk *.bin *.asm *.lst *.mem *.rst *.lnk *.rel *.sym *.ihx *.map
-# clean:
-# 	rm -rf *.asm *.lst *.mem *.rst *.lnk *.rel *.sym *.ihx *.hex *.map *.lk
 ```
-如果你用了更多或更少或修改了文件名，仅需要对上面的makefile文件进行增删改（如果主函数所在的C 文件文件名修改了，这里面也要修改）。
+主函数所在的文件要是`main.c`
 ## 使用感受
 
 SDCC的编程和keil有些区别，它有着不同于keil的头文件。里面的内容和`reg51.h`有很大的区别，当然寄存器还是那些寄存器。keil C 里面的关键字在SDCC 里面不能用，尤其是终端的关键字在SDCC 里面变成了（__interrupt）（中断函数还要写声明），不过这些很容易该过来。让人不舒服的是vscode里面有一堆错误曲线，特有的关键字还不能提示和补全。
